@@ -91,6 +91,18 @@ TVirtualFitter *tFitter=0;
 
 ClassImp(TTreePlayer)
 
+//______________________________________________________________________________
+Int_t TTreePlayer::MakeClassOld(const char *classname, const char *option)
+{
+   
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::MakeClassReader(const char *classname, const char *option)
+{
+   
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 ///*-*                  ========================
@@ -715,6 +727,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 {
    TString opt = option;
    opt.ToLower();
+   
+   Info("MakeClass","Called with option \"%s\"", opt.Data());
 
    // Connect output files
    if (!classname) classname = fTree->GetName();

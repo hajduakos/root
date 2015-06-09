@@ -45,6 +45,8 @@ class TTreePlayer : public TVirtualTreePlayer {
 private:
    TTreePlayer(const TTreePlayer &);
    TTreePlayer& operator=(const TTreePlayer &);
+   virtual Int_t     MakeClassOld(const char *classname, const char *option);
+   virtual Int_t     MakeClassReader(const char *classname, const char *option);
 
 protected:
    TTree         *fTree;            //!  Pointer to current Tree
