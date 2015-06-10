@@ -821,7 +821,7 @@ Int_t TTreePlayer::MakeClassOld(const char *classname, TString opt, TString thea
    leafs->Delete();
    delete leafs;
 
-// second loop on all leaves to generate type declarations
+   // Second loop on all leaves to generate type declarations
    fprintf(fp,"\n   // Declaration of leaf types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
@@ -1461,6 +1461,82 @@ Int_t TTreePlayer::MakeClassOld(const char *classname, TString opt, TString thea
 //______________________________________________________________________________
 Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString thead, TString tcimp, FILE *fp, FILE *fpc, Bool_t ischain, Bool_t isHbook, TString treefile)
 {
+   //======================Generate classname.h=====================
+   // Print header
+   TObjArray *leaves = fTree->GetListOfLeaves();
+   Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
+   TDatime td;
+   fprintf(fp,"//////////////////////////////////////////////////////////\n");
+   fprintf(fp,"// This class has been automatically generated on\n");
+   fprintf(fp,"// %s by ROOT version %s\n",td.AsString(),gROOT->GetVersion());
+   if (!ischain) {
+      fprintf(fp,"// from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
+      fprintf(fp,"// found on file: %s\n",treefile.Data());
+   } else {
+      fprintf(fp,"// from TChain %s/%s\n",fTree->GetName(),fTree->GetTitle());
+   }
+   fprintf(fp,"//////////////////////////////////////////////////////////\n");
+   fprintf(fp,"\n");
+   fprintf(fp,"#ifndef %s_h\n",classname);
+   fprintf(fp,"#define %s_h\n",classname);
+   fprintf(fp,"\n");
+   fprintf(fp,"#include <TROOT.h>\n");
+   fprintf(fp,"#include <TChain.h>\n");
+   fprintf(fp,"#include <TFile.h>\n");
+   if (isHbook) fprintf(fp,"#include <THbookFile.h>\n");
+   if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
+   fprintf(fp,"#include <TTreeReader.h>\n");
+   fprintf(fp,"#include <TTreeReaderValue.h>\n"); // TODO: optimization: only if there are leaf values
+   fprintf(fp,"#include <TTreeReaderArray.h>\n"); // TODO: optimization: only if there are leaf arrays
+
+   // See if we can add any #include about the user data.
+   Int_t l;
+   fprintf(fp,"\n// Header file for the classes stored in the TTree if any.\n");
+   TList listOfHeaders;
+   listOfHeaders.SetOwner();
+   for (l=0;l<nleaves;l++) {
+      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      TBranch *branch = leaf->GetBranch();
+      TClass *cl = TClass::GetClass(branch->GetClassName());
+      if (cl && cl->IsLoaded() && !listOfHeaders.FindObject(cl->GetName())) {
+         const char *declfile = cl->GetDeclFileName();
+         if (declfile && declfile[0]) {
+            static const char *precstl = "prec_stl/";
+            static const unsigned int precstl_len = strlen(precstl);
+            static const char *rootinclude = "include/";
+            static const unsigned int rootinclude_len = strlen(rootinclude);
+            if (strncmp(declfile,precstl,precstl_len) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+precstl_len);
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+precstl_len));
+            } else if (strncmp(declfile,"/usr/include/",13) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+strlen("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+strlen("/include/c++/")));
+            } else if (strstr(declfile,"/include/c++/") != 0) {
+               fprintf(fp,"#include <%s>\n",declfile+strlen("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+strlen("/include/c++/")));
+            } else if (strncmp(declfile,rootinclude,rootinclude_len) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
+            } else {
+               fprintf(fp,"#include \"%s\"\n",declfile);
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile));
+            }
+         }
+      }
+   }
+   
+   fprintf(fp,"\n");
+   if (opt.Contains("selector")) {
+      fprintf(fp,"class %s : public TSelector {\n",classname);
+      fprintf(fp,"public :\n");
+      fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
+   } else {
+      fprintf(fp,"class %s {\n",classname);
+      fprintf(fp,"public :\n");
+      fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
+      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
+   }
+   
    
    return 0;
 }
