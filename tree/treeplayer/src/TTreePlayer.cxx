@@ -1537,6 +1537,205 @@ Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString t
       fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
    }
    
+   // Loop on all leaves to generate type declarations
+   Int_t len, lenb;
+   char blen[1024];
+   char *bname;
+   
+   fprintf(fp,"\n   // Variables used to access and store the data\n");
+   TLeaf *leafcount;
+   TLeafObject *leafobj;
+   TBranchElement *bre=0;
+   const char *headOK  = "   ";
+   const char *headcom = " //";
+   const char *head;
+   char branchname[1024];
+   char aprefix[1024];
+   TObjArray branches(100);
+   TObjArray mustInit(100);
+   TObjArray mustInitArr(100);
+   mustInitArr.SetOwner(kFALSE);
+   Int_t *leafStatus = new Int_t[nleaves];
+   for (l=0;l<nleaves;l++) {
+      Int_t kmax = 0;
+      head = headOK;
+      leafStatus[l] = 0;
+      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      len = leaf->GetLen(); if (len<=0) len = 1;
+      leafcount = leaf->GetLeafCount();
+      TBranch *branch = leaf->GetBranch();
+      branchname[0] = 0;
+      strlcpy(branchname,branch->GetName(),sizeof(branchname));
+      strlcpy(aprefix,branch->GetName(),sizeof(aprefix));
+      if (!branches.FindObject(branch)) branches.Add(branch);
+      else leafStatus[l] = 1;
+      if ( branch->GetNleaves() > 1) {
+         // More than one leaf for the branch we need to distinguish them
+         strlcat(branchname,".",sizeof(branchname));
+         strlcat(branchname,leaf->GetTitle(),sizeof(branchname));
+         if (leafcount) {
+            // remove any dimension in title
+            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
+         }
+      } else {
+         strlcpy(branchname,branch->GetName(),sizeof(branchname));
+      }
+      char *twodim = (char*)strstr(leaf->GetTitle(),"][");
+      bname = branchname;
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ',') *bname='_';
+         if (*bname == ':') *bname='_';
+         if (*bname == '<') *bname='_';
+         if (*bname == '>') *bname='_';
+         bname++;
+      }
+      if (branch->IsA() == TBranchObject::Class()) {
+         if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1; continue;}
+         leafobj = (TLeafObject*)leaf;
+         if (!leafobj->GetClass()) {leafStatus[l] = 1; head = headcom;}
+         fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",head,leafobj->GetTypeName(), leafobj->GetName());
+         if (leafStatus[l] == 0) mustInit.Add(leafobj);
+         continue;
+      }
+      if (leafcount) {
+         len = leafcount->GetMaximum();
+         if (len<=0) len = 1;
+         strlcpy(blen,leafcount->GetName(),sizeof(blen));
+         bname = &blen[0];
+         while (*bname) {
+            if (*bname == '.') *bname='_';
+            if (*bname == ',') *bname='_';
+            if (*bname == ':') *bname='_';
+            if (*bname == '<') *bname='_';
+            if (*bname == '>') *bname='_';
+            bname++;
+         }
+         lenb = strlen(blen);
+         if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
+         else                     snprintf(blen,sizeof(blen),"%d",len);
+      }
+      if (branch->IsA() == TBranchElement::Class()) {
+         bre = (TBranchElement*)branch;
+         if (bre->GetType() != 3 && bre->GetType() != 4
+             && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) {
+            leafStatus[l] = 0;
+         }
+         if (bre->GetType() == 3 || bre->GetType() == 4) {
+            fprintf(fp,"   TTreeReaderValue<%s> %s_;\n","Int_t", branchname);
+            continue;
+         }
+         if (bre->IsBranchFolder()) {
+            fprintf(fp,"   TTreeReaderValue<%s> %s;\n",bre->GetClassName(), branchname);
+            mustInit.Add(bre);
+            continue;
+         } else {
+            if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
+         }
+         if (bre->GetStreamerType() < 0) {
+            if (branch->GetListOfBranches()->GetEntriesFast()) {
+               fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",headcom,bre->GetClassName(), branchname);
+            } else {
+               fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",head,bre->GetClassName(), branchname);
+               mustInit.Add(bre);
+            }
+            continue;
+         }
+         if (bre->GetStreamerType() == 0) {
+            if (!TClass::GetClass(bre->GetClassName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
+            fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",head,bre->GetClassName(), branchname);
+            if (leafStatus[l] == 0) mustInit.Add(bre);
+            continue;
+         }
+         if (bre->GetStreamerType() > 60) {
+            TClass *cle = TClass::GetClass(bre->GetClassName());
+            if (!cle) {leafStatus[l] = 1; continue;}
+            if (bre->GetStreamerType() == 66) leafStatus[l] = 0;
+            char brename[256];
+            strlcpy(brename,bre->GetName(),255);
+            char *bren = brename;
+            char *adot = strrchr(bren,'.');
+            if (adot) bren = adot+1;
+            char *brack = strchr(bren,'[');
+            if (brack) *brack = 0;
+            TStreamerElement *elem = (TStreamerElement*)cle->GetStreamerInfo()->GetElements()->FindObject(bren);
+            if (elem) {
+               if (elem->IsA() == TStreamerBase::Class()) {leafStatus[l] = 1; continue;}
+               if (!TClass::GetClass(elem->GetTypeName())) {leafStatus[l] = 1; continue;}
+               if (!TClass::GetClass(elem->GetTypeName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
+               if (leafcount) fprintf(fp,"%sTTreeReaderArray<%s> %s;\n",head,elem->GetTypeName(), branchname);
+               else           fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",head,elem->GetTypeName(), branchname);
+            } else {
+               if (!TClass::GetClass(bre->GetClassName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
+               fprintf(fp,"%sTTreeReaderValue<%s> %s;\n",head,bre->GetClassName(), branchname);
+            }
+            continue;
+         }
+      }
+      if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
+      if (leafcount) {
+         //len = leafcount->GetMaximum();
+         //strlcpy(blen,leafcount->GetName(),sizeof(blen));
+         //bname = &blen[0];
+         //while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         //lenb = strlen(blen);
+         //Int_t kmax = 0;
+         //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
+         //else                     sprintf(blen,"%d",len);
+
+         const char *stars = " ";
+         if (bre && bre->GetBranchCount2()) {
+            stars = "*";
+         }
+         // Dimensions can be in the branchname for a split Object with a fix length C array.
+         // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
+         TString dimensions;
+         char *dimInName = (char*) strstr(branchname,"[");
+         if ( twodim || dimInName ) {
+            if (dimInName) {
+               dimensions = dimInName;
+               dimInName[0] = 0; // terminate branchname before the array dimensions.
+            }
+            if (twodim) dimensions += (char*)(twodim+1);
+         }
+         const char* leafcountName = leafcount->GetName();
+         char b2len[1024];
+         if (bre && bre->GetBranchCount2()) {
+            TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
+            strlcpy(b2len,l2->GetName(),sizeof(b2len));
+            bname = &b2len[0];
+            while (*bname) {
+               if (*bname == '.') *bname='_';
+               if (*bname == ',') *bname='_';
+               if (*bname == ':') *bname='_';
+               if (*bname == '<') *bname='_';
+               if (*bname == '>') *bname='_';
+               bname++;
+            }
+            leafcountName = b2len;
+         }
+         if (dimensions.Length())
+            fprintf(fp,"   TTreeReaderArray<%s%s%s> %s;   //[%s]\n",leaf->GetTypeName(), stars,
+                    dimensions.Data(), branchname,leafcountName);
+         else 
+            fprintf(fp,"   TTreeReaderArray<%s%s> %s;   //[%s]\n",leaf->GetTypeName(), stars, branchname,leafcountName);
+         
+         if (stars[0]=='*') { // TODO: is this needed?
+            TNamed *n;
+            if (kmax) n = new TNamed(branchname, Form("kMax%s",blen));
+            else n = new TNamed(branchname, Form("%d",len));
+            mustInitArr.Add(n);
+         }
+      } else {
+         if (strstr(branchname,"[")) len = 1;
+         if (len < 2) fprintf(fp,"   TTreeReaderValue<%s> %s;\n",leaf->GetTypeName(), branchname);
+         else {
+            // TODO: transform this
+            if (twodim) fprintf(fp,"   %-15s %s%s;\n",leaf->GetTypeName(), branchname,(char*)strstr(leaf->GetTitle(),"["));
+            else        fprintf(fp,"   TTreeReaderArray<%s> %s;\n",leaf->GetTypeName(), branchname);
+         }
+      }
+   }
    
    return 0;
 }
