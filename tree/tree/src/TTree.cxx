@@ -6008,7 +6008,11 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
 
 Int_t TTree::MakeSelector(const char* selector)
 {
-   return MakeClass(selector, "selector");
+   // return MakeClass(selector, "selector");
+   
+   // For testing purpose generate both in the old way and with TTreeReader.
+   MakeClass(selector, "selector");
+   return MakeClass(selector, "selector,reader");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

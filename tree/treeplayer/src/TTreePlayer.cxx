@@ -1459,9 +1459,10 @@ Int_t TTreePlayer::MakeClassOld(const char *classname, TString opt, TString thea
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::MakeClassReader(const char *classname, const char *option)
+Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString thead, TString tcimp, FILE *fp, FILE *fpc, Bool_t ischain, Bool_t isHbook, TString treefile)
 {
    
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1512,6 +1513,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
    TString thead;
    thead.Form("%s.h", classname);
+   if (opt.Contains("reader")) thead.Form("%s_reader.h", classname); // For testing only
    FILE *fp = fopen(thead, "w");
    if (!fp) {
       Error("MakeClass","cannot open output file %s", thead.Data());
@@ -1519,6 +1521,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
    TString tcimp;
    tcimp.Form("%s.C", classname);
+   if (opt.Contains("reader")) tcimp.Form("%s_reader.C", classname); // For testing only
    FILE *fpc = fopen(tcimp, "w");
    if (!fpc) {
       Error("MakeClass","cannot open output file %s", tcimp.Data());
@@ -1539,9 +1542,17 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (isHbook)
       treefile = fTree->GetTitle();
 
-   Int_t retval = MakeClassOld(classname, opt, thead, tcimp, fp, fpc, ischain, isHbook, treefile);
+   Int_t retval;
+   
+   // Determine whether the classes are generated using TTreeReader or
+   // in the old way.
+   if (opt.Contains("reader"))
+      retval = MakeClassReader(classname, opt, thead, tcimp, fp, fpc, ischain, isHbook, treefile);
+   else
+      retval = MakeClassOld(classname, opt, thead, tcimp, fp, fpc, ischain, isHbook, treefile);
 
-   if (retval == 0) Info("MakeClass","Files: %s and %s generated from TTree: %s",thead.Data(),tcimp.Data(),fTree->GetName());
+   if (retval == 0)
+      Info("MakeClass","Files: %s and %s generated from TTree: %s",thead.Data(),tcimp.Data(),fTree->GetName());
    fclose(fp);
    fclose(fpc);
 
