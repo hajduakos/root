@@ -687,82 +687,11 @@ static TString R__GetBranchPointerName(TLeaf *leaf, Bool_t replace = kTRUE)
    return branchname;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Generate skeleton analysis class for this Tree.
-///
-/// The following files are produced: classname.h and classname.C
-/// If classname is 0, classname will be called "nameoftree.
-///
-/// The generated code in classname.h includes the following:
-///    - Identification of the original Tree and Input file name
-///    - Definition of analysis class (data and functions)
-///    - the following class functions:
-///       - constructor (connecting by default the Tree file)
-///       - GetEntry(Long64_t entry)
-///       - Init(TTree *tree) to initialize a new TTree
-///       - Show(Long64_t entry) to read and Dump entry
-///
-/// The generated code in classname.C includes only the main
-/// analysis function Loop.
-///
-/// To use this function:
-///    - connect your Tree file (eg: TFile f("myfile.root");)
-///    - T->MakeClass("MyClass");
-/// where T is the name of the Tree in file myfile.root
-/// and MyClass.h, MyClass.C the name of the files created by this function.
-/// In a ROOT session, you can do:
-///    root> .L MyClass.C
-///    root> MyClass t
-///    root> t.GetEntry(12); // Fill t data members with entry number 12
-///    root> t.Show();       // Show values of entry 12
-///    root> t.Show(16);     // Read and show values of entry 16
-///    root> t.Loop();       // Loop on all entries
-///
-///  NOTE: Do not use the code generated for one Tree in case of a TChain.
-///        Maximum dimensions calculated on the basis of one TTree only
-///        might be too small when processing all the TTrees in one TChain.
-///        Instead of myTree.MakeClass(..,  use myChain.MakeClass(..
 
-Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
+//______________________________________________________________________________
+Int_t TTreePlayer::MakeClassOld(const char *classname, TString opt, TString thead, TString tcimp, FILE *fp, FILE *fpc, Bool_t ischain, Bool_t isHbook, TString treefile)
 {
-   TString opt = option;
-   opt.ToLower();
-   
-   Info("MakeClass","Called with option \"%s\"", opt.Data());
-
-   // Connect output files
-   if (!classname) classname = fTree->GetName();
-
-   TString thead;
-   thead.Form("%s.h", classname);
-   FILE *fp = fopen(thead, "w");
-   if (!fp) {
-      Error("MakeClass","cannot open output file %s", thead.Data());
-      return 3;
-   }
-   TString tcimp;
-   tcimp.Form("%s.C", classname);
-   FILE *fpc = fopen(tcimp, "w");
-   if (!fpc) {
-      Error("MakeClass","cannot open output file %s", tcimp.Data());
-      fclose(fp);
-      return 3;
-   }
-   TString treefile;
-   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile()) {
-      treefile = fTree->GetDirectory()->GetFile()->GetName();
-   } else {
-      treefile = "Memory Directory";
-   }
-   // In the case of a chain, the GetDirectory information usually does
-   // pertain to the Chain itself but to the currently loaded tree.
-   // So we can not rely on it.
-   Bool_t ischain = fTree->InheritsFrom(TChain::Class());
-   Bool_t isHbook = fTree->InheritsFrom("THbookTree");
-   if (isHbook)
-      treefile = fTree->GetTitle();
-
-//======================Generate classname.h=====================
+   //======================Generate classname.h=====================
    // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
@@ -1524,12 +1453,99 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
    }
-   Info("MakeClass","Files: %s and %s generated from TTree: %s",thead.Data(),tcimp.Data(),fTree->GetName());
    delete [] leafStatus;
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::MakeClassReader(const char *classname, const char *option)
+{
+   
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Generate skeleton analysis class for this Tree.
+///
+/// The following files are produced: classname.h and classname.C
+/// If classname is 0, classname will be called "nameoftree.
+///
+/// The generated code in classname.h includes the following:
+///    - Identification of the original Tree and Input file name
+///    - Definition of analysis class (data and functions)
+///    - the following class functions:
+///       - constructor (connecting by default the Tree file)
+///       - GetEntry(Long64_t entry)
+///       - Init(TTree *tree) to initialize a new TTree
+///       - Show(Long64_t entry) to read and Dump entry
+///
+/// The generated code in classname.C includes only the main
+/// analysis function Loop.
+///
+/// To use this function:
+///    - connect your Tree file (eg: TFile f("myfile.root");)
+///    - T->MakeClass("MyClass");
+/// where T is the name of the Tree in file myfile.root
+/// and MyClass.h, MyClass.C the name of the files created by this function.
+/// In a ROOT session, you can do:
+///    root> .L MyClass.C
+///    root> MyClass t
+///    root> t.GetEntry(12); // Fill t data members with entry number 12
+///    root> t.Show();       // Show values of entry 12
+///    root> t.Show(16);     // Read and show values of entry 16
+///    root> t.Loop();       // Loop on all entries
+///
+///  NOTE: Do not use the code generated for one Tree in case of a TChain.
+///        Maximum dimensions calculated on the basis of one TTree only
+///        might be too small when processing all the TTrees in one TChain.
+///        Instead of myTree.MakeClass(..,  use myChain.MakeClass(..
+
+Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
+{
+   TString opt = option;
+   opt.ToLower();
+   
+   Info("MakeClass","Called with option \"%s\"", opt.Data());
+
+   // Connect output files
+   if (!classname) classname = fTree->GetName();
+
+   TString thead;
+   thead.Form("%s.h", classname);
+   FILE *fp = fopen(thead, "w");
+   if (!fp) {
+      Error("MakeClass","cannot open output file %s", thead.Data());
+      return 3;
+   }
+   TString tcimp;
+   tcimp.Form("%s.C", classname);
+   FILE *fpc = fopen(tcimp, "w");
+   if (!fpc) {
+      Error("MakeClass","cannot open output file %s", tcimp.Data());
+      fclose(fp);
+      return 3;
+   }
+   TString treefile;
+   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile()) {
+      treefile = fTree->GetDirectory()->GetFile()->GetName();
+   } else {
+      treefile = "Memory Directory";
+   }
+   // In the case of a chain, the GetDirectory information usually does
+   // pertain to the Chain itself but to the currently loaded tree.
+   // So we can not rely on it.
+   Bool_t ischain = fTree->InheritsFrom(TChain::Class());
+   Bool_t isHbook = fTree->InheritsFrom("THbookTree");
+   if (isHbook)
+      treefile = fTree->GetTitle();
+
+   Int_t retval = MakeClassOld(classname, opt, thead, tcimp, fp, fpc, ischain, isHbook, treefile);
+
+   if (retval == 0) Info("MakeClass","Files: %s and %s generated from TTree: %s",thead.Data(),tcimp.Data(),fTree->GetName());
    fclose(fp);
    fclose(fpc);
 
-   return 0;
+   return retval;
 }
 
 
