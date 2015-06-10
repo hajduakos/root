@@ -1737,6 +1737,105 @@ Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString t
       }
    }
    
+   // Generate class member functions prototypes
+   if (opt.Contains("selector")) {
+      fprintf(fp,"\n");
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) :",classname) ;
+      // Initialize TTreeReaderValues and TTreeReaderArrays
+      bool isFirst = true;
+      for (l=0;l<nleaves;l++) {
+         if (leafStatus[l]) continue;
+         TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+         len = leaf->GetLen();
+         leafcount = leaf->GetLeafCount();
+         TBranch *branch = leaf->GetBranch();
+         strlcpy(aprefix,branch->GetName(),sizeof(aprefix));
+
+         if ( branch->GetNleaves() > 1) {
+            // More than one leaf for the branch we need to distinguish them
+            strlcpy(branchname,branch->GetName(),sizeof(branchname));
+            strlcat(branchname,".",sizeof(branchname));
+            strlcat(branchname,leaf->GetTitle(),sizeof(branchname));
+            if (leafcount) {
+               // remove any dimension in title
+               char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
+            }
+         } else {
+            strlcpy(branchname,branch->GetName(),sizeof(branchname));
+            if (branch->IsA() == TBranchElement::Class()) {
+               bre = (TBranchElement*)branch;
+               if (bre->GetType() == 3 || bre->GetType()==4) strlcat(branchname,"_",sizeof(branchname));
+            }
+         }
+         bname = branchname;
+         char *brak = strstr(branchname,"[");     if (brak) *brak = 0;
+         char *twodim = (char*)strstr(bname,"["); if (twodim) *twodim = 0;
+         while (*bname) {
+            if (*bname == '.') *bname='_';
+            if (*bname == ',') *bname='_';
+            if (*bname == ':') *bname='_';
+            if (*bname == '<') *bname='_';
+            if (*bname == '>') *bname='_';
+            bname++;
+         }
+         const char *maybedisable = "";
+         if (branch != fTree->GetBranch(branch->GetName())) {
+            Error("MakeClass","The branch named %s (full path name: %s) is hidden by another branch of the same name and its data will not be loaded.",branch->GetName(),R__GetBranchPointerName(leaf,kFALSE).Data());
+            maybedisable = "// ";
+         }
+         const char *comma = isFirst ? "\n" : ",\n";
+         
+         // TODO: is this needed?
+         if (branch->IsA() == TBranchObject::Class()) {
+            if (branch->GetListOfBranches()->GetEntriesFast()) {
+               fprintf(fp,"%s   fChain->SetBranchAddress(\"%s\",(void*)-1,&b_%s);\n",maybedisable,branch->GetName(),R__GetBranchPointerName(leaf).Data());
+               continue;
+            }
+            strlcpy(branchname,branch->GetName(),sizeof(branchname));
+         }
+      
+         fprintf(fp,"%s%s            %s(fReader, \"%s\")",
+                              comma, maybedisable, branchname, branch->GetName());
+         isFirst = false;
+      }
+      fprintf(fp," { }\n");
+      
+      fprintf(fp,"   virtual ~%s() { }\n",classname);
+      fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
+      fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    Init(TTree *tree);\n");
+      fprintf(fp,"   virtual Bool_t  Notify();\n");
+      fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
+      fprintf(fp,"   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
+      fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
+      fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
+      fprintf(fp,"   virtual void    SetInputList(TList *input) { fInput = input; }\n");
+      fprintf(fp,"   virtual TList  *GetOutputList() const { return fOutput; }\n");
+      fprintf(fp,"   virtual void    SlaveTerminate();\n");
+      fprintf(fp,"   virtual void    Terminate();\n\n");
+      fprintf(fp,"   ClassDef(%s,0);\n",classname);
+      fprintf(fp,"};\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"\n");
+   } else {
+      fprintf(fp,"\n");
+      fprintf(fp,"   %s(TTree *tree=0);\n",classname);
+      fprintf(fp,"   virtual ~%s();\n",classname);
+      fprintf(fp,"   virtual Int_t    Cut(Long64_t entry);\n");
+      fprintf(fp,"   virtual Int_t    GetEntry(Long64_t entry);\n");
+      fprintf(fp,"   virtual Long64_t LoadTree(Long64_t entry);\n");
+      fprintf(fp,"   virtual void     Init(TTree *tree);\n");
+      fprintf(fp,"   virtual void     Loop();\n");
+      fprintf(fp,"   virtual Bool_t   Notify();\n");
+      fprintf(fp,"   virtual void     Show(Long64_t entry = -1);\n");
+      fprintf(fp,"};\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"\n");
+   }
+   
    return 0;
 }
 
