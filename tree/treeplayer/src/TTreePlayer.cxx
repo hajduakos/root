@@ -2233,10 +2233,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
    // Connect output files
    if (!classname) classname = fTree->GetName();
+   
+   // For testing only
+   TString classNameReader;
+   if (opt.Contains("reader")) {
+      classNameReader.Form("%s_reader", classname);
+      classname = classNameReader.Data();
+   }
 
    TString thead;
    thead.Form("%s.h", classname);
-   if (opt.Contains("reader")) thead.Form("%s_reader.h", classname); // For testing only
    FILE *fp = fopen(thead, "w");
    if (!fp) {
       Error("MakeClass","cannot open output file %s", thead.Data());
@@ -2244,7 +2250,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
    TString tcimp;
    tcimp.Form("%s.C", classname);
-   if (opt.Contains("reader")) tcimp.Form("%s_reader.C", classname); // For testing only
    FILE *fpc = fopen(tcimp, "w");
    if (!fpc) {
       Error("MakeClass","cannot open output file %s", tcimp.Data());
