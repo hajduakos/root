@@ -2043,6 +2043,148 @@ Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString t
    }
    fprintf(fp,"#endif // #ifdef %s_cxx\n",classname);
    
+   //======================Generate classname.C=====================
+   if (!opt.Contains("selector")) {
+      // generate code for class member function Loop()
+      fprintf(fpc,"#define %s_cxx\n",classname);
+      fprintf(fpc,"#include \"%s\"\n",thead.Data());
+      fprintf(fpc,"#include <TH2.h>\n");
+      fprintf(fpc,"#include <TStyle.h>\n");
+      fprintf(fpc,"#include <TCanvas.h>\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Loop()\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"//   In a ROOT session, you can do:\n");
+      fprintf(fpc,"//      root> .L %s.C\n",classname);
+      fprintf(fpc,"//      root> %s t\n",classname);
+      fprintf(fpc,"//      root> t.GetEntry(12); // Fill t data members with entry number 12\n");
+      fprintf(fpc,"//      root> t.Show();       // Show values of entry 12\n");
+      fprintf(fpc,"//      root> t.Show(16);     // Read and show values of entry 16\n");
+      fprintf(fpc,"//      root> t.Loop();       // Loop on all entries\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"\n//     This is the loop skeleton where:\n");
+      fprintf(fpc,"//    jentry is the global entry number in the chain\n");
+      fprintf(fpc,"//    ientry is the entry number in the current Tree\n");
+      fprintf(fpc,"//  Note that the argument to GetEntry must be:\n");
+      fprintf(fpc,"//    jentry for TChain::GetEntry\n");
+      fprintf(fpc,"//    ientry for TTree::GetEntry and TBranch::GetEntry\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"//       To read only selected branches, Insert statements like:\n");
+      fprintf(fpc,"// METHOD1:\n");
+      fprintf(fpc,"//    fChain->SetBranchStatus(\"*\",0);  // disable all branches\n");
+      fprintf(fpc,"//    fChain->SetBranchStatus(\"branchname\",1);  // activate branchname\n");
+      fprintf(fpc,"// METHOD2: replace line\n");
+      fprintf(fpc,"//    fChain->GetEntry(jentry);       //read all branches\n");
+      fprintf(fpc,"//by  b_branchname->GetEntry(ientry); //read only this branch\n");
+      fprintf(fpc,"   if (fChain == 0) return;\n");
+      fprintf(fpc,"\n   Long64_t nentries = fChain->GetEntriesFast();\n");
+      fprintf(fpc,"\n   Long64_t nbytes = 0, nb = 0;\n");
+      fprintf(fpc,"   for (Long64_t jentry=0; jentry<nentries;jentry++) {\n");
+      fprintf(fpc,"      Long64_t ientry = LoadTree(jentry);\n");
+      fprintf(fpc,"      if (ientry < 0) break;\n");
+      fprintf(fpc,"      nb = fChain->GetEntry(jentry);   nbytes += nb;\n");
+      fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
+      fprintf(fpc,"   }\n");
+      fprintf(fpc,"}\n");
+   }
+   if (opt.Contains("selector")) {
+      // generate usage comments and list of includes
+      fprintf(fpc,"#define %s_cxx\n",classname);
+      fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",classname);
+      fprintf(fpc,"// by the ROOT utility TTree::MakeSelector(). This class is derived\n");
+      fprintf(fpc,"// from the ROOT class TSelector. For more information on the TSelector\n"
+                  "// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.\n\n");
+      fprintf(fpc,"// The following methods are defined in this file:\n");
+      fprintf(fpc,"//    Begin():        called every time a loop on the tree starts,\n");
+      fprintf(fpc,"//                    a convenient place to create your histograms.\n");
+      fprintf(fpc,"//    SlaveBegin():   called after Begin(), when on PROOF called only on the\n"
+                  "//                    slave servers.\n");
+      fprintf(fpc,"//    Process():      called for each event, in this function you decide what\n");
+      fprintf(fpc,"//                    to read and fill your histograms.\n");
+      fprintf(fpc,"//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF\n"
+                  "//                    called only on the slave servers.\n");
+      fprintf(fpc,"//    Terminate():    called at the end of the loop on the tree,\n");
+      fprintf(fpc,"//                    a convenient place to draw/fit your histograms.\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"// To use this file, try the following session on your Tree T:\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"// root> T->Process(\"%s.C\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C\",\"some options\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C+\")\n",classname);
+      fprintf(fpc,"//\n\n");
+      fprintf(fpc,"#include \"%s\"\n",thead.Data());
+      fprintf(fpc,"#include <TH2.h>\n");
+      fprintf(fpc,"#include <TStyle.h>\n");
+      fprintf(fpc,"\n");
+      // generate code for class member function Begin
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
+      fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
+      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   TString option = GetOption();\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function SlaveBegin
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
+      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
+      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   TString option = GetOption();\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function Process
+      fprintf(fpc,"\n");
+      fprintf(fpc,"Bool_t %s::Process(Long64_t entry)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
+                  "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
+                  "   // specifies which entry in the currently loaded tree is to be processed.\n"
+                  "   // It can be passed to either %s::GetEntry() or TBranch::GetEntry()\n"
+                  "   // to read either all or the required parts of the data. When processing\n"
+                  "   // keyed objects with PROOF, the object is already loaded and is available\n"
+                  "   // via the fObject pointer.\n"
+                  "   //\n"
+                  "   // This function should contain the \"body\" of the analysis. It can contain\n"
+                  "   // simple or elaborate selection criteria, run algorithms on the data\n"
+                  "   // of the event and typically fill histograms.\n"
+                  "   //\n"
+                  "   // The processing can be stopped by calling Abort().\n"
+                  "   //\n"
+                  "   // Use fStatus to set the return value of TTree::Process().\n"
+                  "   //\n"
+                  "   // The return value is currently not used.\n\n", classname);
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   return kTRUE;\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function SlaveTerminate
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::SlaveTerminate()\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // The SlaveTerminate() function is called after all entries or objects\n"
+                  "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
+                  "   // on each slave server.");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function Terminate
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Terminate()\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // The Terminate() function is the last function to be called during\n"
+                  "   // a query. It always runs on the client, it can be used to present\n"
+                  "   // the results graphically or save the results to file.");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+   }
+   delete [] leafStatus;
+   
    return 0;
 }
 
