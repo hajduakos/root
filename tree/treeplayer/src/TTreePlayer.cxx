@@ -2160,6 +2160,7 @@ Int_t TTreePlayer::MakeClassReader(const char *classname, TString opt, TString t
                   "   //\n"
                   "   // The return value is currently not used.\n\n", classname);
       fprintf(fpc,"\n");
+      fprintf(fpc,"   fReader.SetEntry(entry);\n\n\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
       // generate code for class member function SlaveTerminate
