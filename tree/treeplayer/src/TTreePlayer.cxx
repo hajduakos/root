@@ -2668,6 +2668,15 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
    return 0;
 }
 
+
+//______________________________________________________________________________
+Int_t TTreePlayer::MakeSelectorReader(const char *classname, Int_t maxUnrolling)
+{
+   if (!classname) classname = fTree->GetName();
+   printf("TTreePlayer::MakeSelectorReader, classname=%s\n", classname);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to the Principal Components Analysis class.
 ///
