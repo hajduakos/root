@@ -70,6 +70,7 @@
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
+#include "TTreeSelectorReaderGenerator.h"
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
 #include "TRefProxy.h"
@@ -2674,6 +2675,11 @@ Int_t TTreePlayer::MakeSelectorReader(const char *classname, Int_t maxUnrolling)
 {
    if (!classname) classname = fTree->GetName();
    printf("TTreePlayer::MakeSelectorReader, classname=%s\n", classname);
+   
+
+   TTreeSelectorReaderGenerator gsr(fTree, classname, maxUnrolling);
+
+   return 0;
 }
 
 
