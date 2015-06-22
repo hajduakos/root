@@ -34,15 +34,19 @@ namespace ROOT {
 
    class TTreeSelectorReaderGenerator
    {
-      TTree   *fTree;         // Pointer to the tree
-      TString  fClassname;    // Class name of the selector
-      UInt_t   fMaxUnrolling; // Depth of unrolling for non-split classes
+      TTree   *fTree;          // Pointer to the tree
+      TString  fClassname;     // Class name of the selector
+      UInt_t   fMaxUnrolling;  // Depth of unrolling for non-split classes
+      TList    fListOfHeaders; // List of included headers
       
-   public:
-      TTreeSelectorReaderGenerator(TTree* tree, const char *classname, UInt_t maxUnrolling);
+      void   AddHeader(TClass *cl);
       
       void   AnalyzeTree(TTree *tree);
       void   WriteSelector();
+   
+   public:
+      TTreeSelectorReaderGenerator(TTree* tree, const char *classname, UInt_t maxUnrolling);
+      
    };
 
 }
