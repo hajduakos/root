@@ -309,6 +309,21 @@ namespace ROOT {
             } else if (cl->GetCollectionProxy()) {
                // TODO: implement this
                printf("TODO: cl->GetCollectionProxy\n");
+               
+               isclones = kSTL; // It is an STL container
+               containerName = cl->GetName();
+               // Check the type inside container
+               if (cl->GetCollectionProxy()->GetValueClass()) { // Class inside container
+                  cl = cl->GetCollectionProxy()->GetValueClass();
+               } else { // RAW type (or missing class) inside container
+                  printf("TODO: RAW type or missing class inside container (%s)\n", cl->GetName());
+                  /*CheckForMissingClass(cl->GetName());
+                  type = Form("TStlSimpleProxy<%s >", cl->GetName());
+                  AddHeader(cl);
+                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+                  AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
+                  continue;*/
+               }
             }
             
             if (cl) {
