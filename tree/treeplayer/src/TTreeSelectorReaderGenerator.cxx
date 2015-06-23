@@ -14,6 +14,7 @@
 
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TClonesArray.h"
 #include "TError.h"
 #include "TLeaf.h"
 #include "TLeafC.h"
@@ -166,7 +167,10 @@ namespace ROOT {
       Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
       
       if (nleaves>1) {
-         // TODO: implement this
+         // TODO: implement this       
+         // (this happens in the case of embedded objects inside an object inside
+         // a clones array split more than one level)
+         printf("TODO: AnalyzeOldBranch with nleaves>1\n");
       } else {
          TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
          extraLookedAt += AnalyzeOldLeaf(leaf);
@@ -296,19 +300,35 @@ namespace ROOT {
          TString type = "unknown";
          // Classes
          if (cl) {
-            // TODO: implement this
+            ELocation isclones = kOut;
+            TString containerName = "";
+            
+            if (cl == TClonesArray::Class()) {
+               // TODO: implement this
+               printf("TODO: cl == TClonesArray\n");
+            } else if (cl->GetCollectionProxy()) {
+               // TODO: implement this
+               printf("TODO: cl->GetCollectionProxy\n");
+            }
+            
+            if (cl) {
+               // TODO: implement this
+               printf("TODO: classes, last cl\n");
+            }
          }
          
          if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
             
             if (cl) { // Non-split object
                // TODO: implement this
+               printf("TODO: non-split object\n");
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch, 0);
             }
          
          } else { // Branch is splitted
             // TODO: implement this
+            printf("TODO: splitted branch\n");
          }
       }
       
