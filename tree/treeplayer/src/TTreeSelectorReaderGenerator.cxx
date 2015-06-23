@@ -36,7 +36,7 @@ namespace ROOT {
       // Add a header inclusion request.
       if (cl==0) return;
       
-      printf("AddHeader(%s)\n", cl->GetName());
+      printf("\tAddHeader(%s)\n", cl->GetName());
       
       // Check if already included
       TObject *obj = fListOfHeaders.FindObject(cl->GetName());
@@ -134,7 +134,7 @@ namespace ROOT {
             }
          }
          fListOfHeaders.Add(new TNamed(cl->GetName(), directive.Data()));
-         printf("Added directive: %s", directive.Data());
+         printf("\t\tAdded directive: %s", directive.Data());
       }
    }
    
@@ -149,11 +149,30 @@ namespace ROOT {
          // Get the name and the class of the branch
          const char *branchName = branch->GetName();
          const char *branchClassName = branch->GetClassName();
+         TClass *cl = TClass::GetClass(branchClassName);
          printf("Branch name: %s, class name: %s\n", branch->GetName(), branch->GetClassName());
          
          // Add headers for user classes
          if (branchClassName && strlen(branchClassName)) {
-            AddHeader(TClass::GetClass(branchClassName));
+            AddHeader(cl);
+         }
+         
+         TString type = "unknown";
+         // Classes
+         if (cl) {
+            // TODO: implement this
+         }
+         
+         if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
+            
+            if (cl) { // Non-split object
+               
+            } else { // Top-level RAW type
+               
+            }
+         
+         } else { // Branch is splitted
+            
          }
       }
       
