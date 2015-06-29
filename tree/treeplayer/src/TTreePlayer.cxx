@@ -92,18 +92,6 @@ TVirtualFitter *tFitter=0;
 
 ClassImp(TTreePlayer)
 
-//______________________________________________________________________________
-Int_t TTreePlayer::MakeClassOld(const char *classname, const char *option)
-{
-   
-}
-
-//______________________________________________________________________________
-Int_t TTreePlayer::MakeClassReader(const char *classname, const char *option)
-{
-   
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 ///*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 ///*-*                  ========================
