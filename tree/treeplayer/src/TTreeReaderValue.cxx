@@ -414,7 +414,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
       } else if (brElement->GetType() == 31
                  || brElement->GetType() == 41) {
          // it's a member, extract from GetClass()'s streamer info
-         Error("GetBranchDataType()", "Must use TTreeReaderArray to access a member of an object that is stored in a collection.");
+         Error("GetBranchDataType()", "Must use TTreeReaderValueArray to access a member of an object that is stored in a collection.");
       }
       else {
          Error("GetBranchDataType()", "Unknown type and class combination: %i, %s", brElement->GetType(), brElement->GetClassName());
