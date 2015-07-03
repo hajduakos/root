@@ -320,13 +320,13 @@ namespace ROOT {
                if (cl->GetCollectionProxy()->GetValueClass()) { // Class inside container
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else { // RAW type (or missing class) inside container
-                  printf("TODO: RAW type or missing class inside container (%s)\n", cl->GetName());
-                  /*CheckForMissingClass(cl->GetName());
-                  type = Form("TStlSimpleProxy<%s >", cl->GetName());
-                  AddHeader(cl);
-                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
-                  AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
-                  continue;*/
+                  // TODO: CheckForMissingClass?
+                  // TODO: AddHeader(cl); (if using TRV)
+                  AddReader(TTreeReaderDescriptor::ReaderType::kArray,
+                            TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
+                            branch->GetName(),
+                            branch->GetName());
+                  continue;
                }
             }
             
