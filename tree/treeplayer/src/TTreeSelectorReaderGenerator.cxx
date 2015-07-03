@@ -194,7 +194,7 @@ namespace ROOT {
       
       TString leafTypeName = leaf->GetTypeName();
       Int_t pos = leafTypeName.Last('_');
-      if (pos != -1) leafTypeName.Remove(pos);
+      //if (pos != -1) leafTypeName.Remove(pos); // FIXME: this is not required since it makes Float_t -> Float
       
       // Analyze dimensions
       UInt_t dim = 0;
@@ -433,11 +433,55 @@ namespace ROOT {
                                                    descriptor->fName.Data() );
       }
       fprintf(fp, "\n\n");
-
+      // Generate class member functions prototypes
+      next.Reset();
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0)", fClassname.Data());
+      while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
+         fprintf(fp, ",\n            %s(fReader, \"%s\")", descriptor->fName.Data(), descriptor->fBranchName.Data());
+      }
+      fprintf(fp," { }\n");
+      fprintf(fp,"   virtual ~%s() { }\n", fClassname.Data());
+      fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
+      fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    Init(TTree *tree);\n");
+      fprintf(fp,"   virtual Bool_t  Notify();\n");
+      fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
+      fprintf(fp,"   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
+      fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
+      fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
+      fprintf(fp,"   virtual void    SetInputList(TList *input) { fInput = input; }\n");
+      fprintf(fp,"   virtual TList  *GetOutputList() const { return fOutput; }\n");
+      fprintf(fp,"   virtual void    SlaveTerminate();\n");
+      fprintf(fp,"   virtual void    Terminate();\n\n");
       fprintf(fp,"   ClassDef(%s,0);\n", fClassname.Data());
       fprintf(fp,"};\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#endif\n\n");
+      // Generate code for Init and Notify
+      fprintf(fp,"#ifdef %s_cxx\n", fClassname.Data());
+      fprintf(fp,"void %s::Init(TTree *tree)\n", fClassname.Data());
+      fprintf(fp,"{\n");
+      fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
+                 "   // a new tree or chain. Typically here the branch addresses and branch\n" // TODO: replace comment?
+                 "   // pointers of the tree will be set.\n"
+                 "   // It is normally not necessary to make changes to the generated\n"
+                 "   // code, but the routine can be extended by the user if needed.\n"
+                 "   // Init() will be called many times when running on PROOF\n"
+                 "   // (once per file to be processed).\n\n");
+      fprintf(fp,"   fReader.SetTree(tree);");
+      fprintf(fp,"}\n\n");
 
-      fprintf(fp,"#endif\n");
+      fprintf(fp,"Bool_t %s::Notify()\n", fClassname.Data());
+      fprintf(fp,"{\n");
+      fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
+                 "   // can be either for a new TTree in a TChain or when when a new TTree\n"
+                 "   // is started when using PROOF. It is normally not necessary to make changes\n"
+                 "   // to the generated code, but the routine can be extended by the\n"
+                 "   // user if needed. The return value is currently not used.\n\n");
+      fprintf(fp,"   return kTRUE;\n");
+      fprintf(fp,"}\n\n");
+      fprintf(fp,"#endif // #ifdef %s_cxx\n", fClassname.Data());
       fclose(fp);
 
       //======================Generate classname.C=====================
