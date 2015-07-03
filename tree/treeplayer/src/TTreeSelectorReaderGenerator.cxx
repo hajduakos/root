@@ -423,6 +423,16 @@ namespace ROOT {
       fprintf(fp,"public :\n");
       fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      // Generate TTreeReaderValues and Arrays
+      fprintf(fp,"\n   // Variables used to access and store the data\n");
+      next = &fListOfReaders;
+      TTreeReaderDescriptor *descriptor;
+      while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
+         fprintf(fp, "   TTreeReader%s<%s> %s;\n", descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
+                                                   descriptor->fDataType.Data(),
+                                                   descriptor->fName.Data() );
+      }
+      fprintf(fp, "\n\n");
 
       fprintf(fp,"   ClassDef(%s,0);\n", fClassname.Data());
       fprintf(fp,"};\n");
