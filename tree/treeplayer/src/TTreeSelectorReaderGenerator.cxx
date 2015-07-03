@@ -12,10 +12,13 @@
 #include "TTreeSelectorReaderGenerator.h"
 #include <stdio.h>
 
+#include "TChain.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClonesArray.h"
+#include "TDirectory.h"
 #include "TError.h"
+#include "TFile.h"
 #include "TLeaf.h"
 #include "TLeafC.h"
 #include "TLeafObject.h"
@@ -353,5 +356,42 @@ namespace ROOT {
    void TTreeSelectorReaderGenerator::WriteSelector()
    {
       // Generate code for selector class.
+
+      // If no name is given, set to default (name of the tree)
+      if (!fClassname) fClassname = fTree->GetName();
+
+      TString thead;
+      thead.Form("%s.h", fClassname.Data());
+      FILE *fp = fopen(thead, "w");
+      if (!fp) {
+         Error("WriteSelector","cannot open output file %s", thead.Data());
+         return;
+      }
+      TString tcimp;
+      tcimp.Form("%s.C", fClassname.Data());
+      FILE *fpc = fopen(tcimp, "w");
+      if (!fpc) {
+         Error("WriteSelector","cannot open output file %s", tcimp.Data());
+         fclose(fp);
+         return;
+      }
+      TString treefile;
+      if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile()) {
+         treefile = fTree->GetDirectory()->GetFile()->GetName();
+      } else {
+         treefile = "Memory Directory";
+      }
+      // In the case of a chain, the GetDirectory information usually does
+      // pertain to the Chain itself but to the currently loaded tree.
+      // So we can not rely on it.
+      Bool_t ischain = fTree->InheritsFrom(TChain::Class());
+      Bool_t isHbook = fTree->InheritsFrom("THbookTree");
+      if (isHbook)
+         treefile = fTree->GetTitle();
+
+
+
+      fclose(fp);
+      fclose(fpc);
    }
 }
