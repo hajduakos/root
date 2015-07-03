@@ -22,6 +22,7 @@
 #include "TLeaf.h"
 #include "TLeafC.h"
 #include "TLeafObject.h"
+#include "TROOT.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
 
@@ -389,7 +390,53 @@ namespace ROOT {
       if (isHbook)
          treefile = fTree->GetTitle();
 
+      //======================Generate classname.h=====================
 
+      // Print header
+      TDatime td;
+      fprintf(fp,"//////////////////////////////////////////////////////////\n");
+      fprintf(fp,"// This class has been automatically generated on\n");
+      fprintf(fp,"// %s by ROOT version %s\n", td.AsString(), gROOT->GetVersion());
+      if (!ischain) {
+         fprintf(fp,"// from TTree %s/%s\n", fTree->GetName(), fTree->GetTitle());
+         fprintf(fp,"// found on file: %s\n", treefile.Data());
+      } else {
+         fprintf(fp,"// from TChain %s/%s\n", fTree->GetName(), fTree->GetTitle());
+      }
+      fprintf(fp,"//////////////////////////////////////////////////////////\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#ifndef %s_h\n", fClassname.Data());
+      fprintf(fp,"#define %s_h\n", fClassname.Data());
+      fprintf(fp,"\n");
+      fprintf(fp,"#include <TROOT.h>\n");
+      fprintf(fp,"#include <TChain.h>\n");
+      fprintf(fp,"#include <TFile.h>\n");
+      if (isHbook) fprintf(fp, "#include <THbookFile.h>\n");
+      fprintf(fp,"#include <TSelector.h>\n");
+      fprintf(fp,"#include <TTreeReader.h>\n");
+      fprintf(fp,"#include <TTreeReaderValue.h>\n"); // TODO: optimization: only if there are leaf values
+      fprintf(fp,"#include <TTreeReaderArray.h>\n"); // TODO: optimization: only if there are leaf arrays
+
+      // Add headers for user classes
+      fprintf(fp,"\n\n");
+      fprintf(fp,"// Headers needed by this particular selector\n");
+      TIter next(&fListOfHeaders);
+      TObject *header;
+      while ( (header = next()) ) {
+         fprintf(fp, "%s", header->GetTitle());
+      }
+      fprintf(fp, "\n\n");
+
+      // Generate class declaration
+      fprintf(fp,"class %s : public TSelector {\n", fClassname.Data());
+      fprintf(fp,"public :\n");
+      fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
+      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+
+      fprintf(fp,"   ClassDef(%s,0);\n", fClassname.Data());
+      fprintf(fp,"};\n");
+
+      fprintf(fp,"#endif\n");
 
       fclose(fp);
       fclose(fpc);
