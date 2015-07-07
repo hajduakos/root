@@ -389,13 +389,19 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
                             branch->GetName(),
                             branch->GetName());
-                  continue;
+                  continue; // Nothing else to with this branch in these cases
                }
             }
             
             if (cl) {
-               // TODO: implement this
-               printf("TODO: classes, last cl\n");
+               if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
+                  // TODO: implement this
+                  printf("Classes, emulation/split case\n");
+               } else {
+                  AddReader(TTreeReaderDescriptor::ReaderType::kValue,
+                            branchClassName, branchName, branchName);
+                  // TODO: can't we just put a continue here?
+               }
             }
          }
          
