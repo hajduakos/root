@@ -338,10 +338,10 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          }
          
          TString type = "unknown";
+         ELocation isclones = kOut;
+         TString containerName = "";
          // Check for container classes
          if (cl) {
-            ELocation isclones = kOut;
-            TString containerName = "";
             // Check if it is a TClonesArray
             if (cl == TClonesArray::Class()) {
                isclones = kClones;
@@ -398,8 +398,11 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   // TODO: implement this
                   printf("Classes, emulation/split case\n");
                } else {
-                  AddReader(TTreeReaderDescriptor::ReaderType::kValue,
-                            branchClassName, branchName, branchName);
+                  // Generate a value or an array for non-split classes
+                  AddReader(isclones == kOut ?
+                              TTreeReaderDescriptor::ReaderType::kValue
+                            : TTreeReaderDescriptor::ReaderType::kArray,
+                            cl->GetName(), branchName, branchName);
                   // TODO: can't we just put a continue here?
                }
             }
