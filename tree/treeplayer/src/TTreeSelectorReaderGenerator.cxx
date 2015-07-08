@@ -343,6 +343,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString type = "unknown";
          ELocation isclones = kOut;
          TString containerName = "";
+         TBranchDescriptor *desc = 0;
          // Check for container classes
          if (cl) {
             // Check if it is a TClonesArray
@@ -398,8 +399,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             
             if (cl) {
                if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
-                  // TODO: implement this
-                  printf("Classes, emulation/split case\n");
+                  TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
+                  TVirtualStreamerInfo *beinfo = (be && isclones == kOut)
+                     ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+                  desc = new TBranchDescriptor(cl->GetName(), beinfo, branchName,
+                     isclones, branch->GetSplitLevel(),containerName);
+                  info = beinfo;
                } else {
                   // Generate a value or an array for non-split classes
                   AddReader(isclones == kOut ?
