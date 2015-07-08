@@ -191,7 +191,69 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                                                   name.Data(),
                                                                   branchName.Data());
    }
-   
+
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info) {
+      if (info==0) info = branch->GetInfo();
+
+      TIter branches( branch->GetListOfBranches() );
+
+      return AnalyzeBranches( level, desc, branches, info );
+   }
+
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info) {
+      UInt_t lookedAt = 0;
+      ELocation container = kOut;
+      TString proxyTypeName;
+      ELocation outer_isclones = kOut;
+      TString containerName;
+      TString subBranchPrefix;
+      Bool_t skipped = false;
+      {
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek();
+         if (desc && desc->IsClones()) {
+            container = kClones;
+            outer_isclones = kClones;
+            containerName = "TClonesArray";
+         } else if (desc && desc->IsSTL()) {
+            container = kSTL;
+            outer_isclones = kSTL;
+            containerName = desc->fContainerName;
+         } else if (!desc && branch && branch->GetBranchCount() == branch->GetMother()) {
+            if ( ((TBranchElement*)(branch->GetMother()))->GetType()==3)  {
+               container = kClones;
+               outer_isclones = kClones;
+               containerName = "TClonesArray";
+            } else {
+               container = kSTL;
+               outer_isclones = kSTL;
+               containerName = branch->GetMother()->GetClassName();
+            }
+         } else if (branch->GetType() == 3) {
+            outer_isclones = kClones;
+            containerName = "TClonesArray";
+         } else if (branch->GetType() == 4) {
+            outer_isclones = kSTL;
+            containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
+         }
+         if (desc) {
+            subBranchPrefix = desc->fSubBranchPrefix;
+         } else {
+            TBranchElement *mom = (TBranchElement*)branch->GetMother();
+            subBranchPrefix = mom->GetName();
+            if (subBranchPrefix[subBranchPrefix.Length()-1]=='.') {
+               subBranchPrefix.Remove(subBranchPrefix.Length()-1);
+            } else if (mom->GetType()!=3 && mom->GetType() != 4) {
+               subBranchPrefix = "";
+            }
+         }
+      }
+
+      printf("containerName: %s subBranchPrefix: %s\n", containerName.Data(), subBranchPrefix.Data());
+
+      return 0;
+   }
+
    UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch, UInt_t level)
    {
       // Analyze branch and add the variables found.
@@ -343,7 +405,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString type = "unknown";
          ELocation isclones = kOut;
          TString containerName = "";
-         TBranchDescriptor *desc = 0;
+         TBranchDescriptor *desc = 0; // TODO: delete after usage
          // Check for container classes
          if (cl) {
             // Check if it is a TClonesArray
@@ -428,6 +490,10 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          } else { // Branch is splitted
             // TODO: implement this
             printf("TODO: splitted branch\n");
+            TIter subnext( branch->GetListOfBranches() );
+            if (desc) {
+               AnalyzeBranches(1, desc, dynamic_cast<TBranchElement*>(branch), info);
+            }
          }
       }
       

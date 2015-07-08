@@ -33,6 +33,7 @@
 
 
 class TBranch;
+class TBranchElement;
 class TLeaf;
 class TTree;
 
@@ -62,17 +63,23 @@ namespace ROOT {
       TString               fContainerName;
       UInt_t                fSplitLevel;
       TString               fBranchName;
+      TString               fSubBranchPrefix;
       TVirtualStreamerInfo *fInfo;
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
-                             const char *branchname, ELocation isclones,
-                             UInt_t splitlevel, const TString &containerName) :
+                        const char *branchname, ELocation isclones,
+                        UInt_t splitlevel, const TString &containerName) :
          TNamed(type,type),
          fIsClones(isclones),
          fContainerName(containerName),
          fSplitLevel(splitlevel),
          fBranchName(branchname),
+         fSubBranchPrefix(branchname),
          fInfo(info) { }
+
+      Bool_t IsClones() const { return fIsClones==kClones || fIsClones==kInsideClones; }
+
+      Bool_t IsSTL() const { return fIsClones==kSTL || fIsClones==kInsideSTL; }
    };
 
    class TTreeSelectorReaderGenerator
@@ -85,6 +92,8 @@ namespace ROOT {
       
       void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
+      UInt_t AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info);
+      UInt_t AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info);
       UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level);
       UInt_t AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves);
       
