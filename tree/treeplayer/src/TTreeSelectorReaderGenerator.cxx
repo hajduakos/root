@@ -302,13 +302,36 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             }
          }
 
-         printf("branchEndName: %s\n", branchEndName.Data());
+         //printf("branchEndName: %s\n", branchEndName.Data());
 
+         TString dataType;
          switch(element->GetType()) {
-            case TVirtualStreamerInfo::kInt:     { printf("Found an Int_t\n"); break; }
+            // Built-in types
+            case TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         break; }
+            case TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         break; }
+            case TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        break; }
+            case TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          break; }
+            case TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         break; }
+            case TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       break; }
+            case TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        break; }
+            case TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      break; }
+            case TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       break; }
+            case TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     break; }
+            case TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        break; }
+            case TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; break; }
+            case TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   break; }
+            case TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        break; }
+            case TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      break; }
+            case TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   break; }
             default:
-               Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(),element->GetType());
+               Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(), element->GetType());
          }
+
+         TString dataMemberName = element->GetName();
+         if (desc) {
+            dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
+         }
+         AddReader(TTreeReaderDescriptor::ReaderType::kValue, dataType, dataMemberName, element->GetName());
       }
 
       return lookedAt;
