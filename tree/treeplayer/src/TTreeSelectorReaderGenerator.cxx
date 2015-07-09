@@ -305,24 +305,61 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          //printf("branchEndName: %s\n", branchEndName.Data());
 
          TString dataType;
+         TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          switch(element->GetType()) {
             // Built-in types
-            case TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         break; }
-            case TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         break; }
-            case TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        break; }
-            case TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          break; }
-            case TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         break; }
-            case TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       break; }
-            case TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        break; }
-            case TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      break; }
-            case TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       break; }
-            case TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     break; }
-            case TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        break; }
-            case TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; break; }
-            case TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   break; }
-            case TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        break; }
-            case TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      break; }
-            case TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   break; }
+            case TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            // Character arrays
+            case TVirtualStreamerInfo::kCharStar: { dataType = "Char_t"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            // Array of built-in types [8]
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            // Array of built-in types [n]
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
             default:
                Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(), element->GetType());
          }
@@ -331,7 +368,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (desc) {
             dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
          }
-         AddReader(TTreeReaderDescriptor::ReaderType::kValue, dataType, dataMemberName, element->GetName());
+         AddReader(readerType, dataType, dataMemberName, element->GetName());
       }
 
       return lookedAt;
