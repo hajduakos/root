@@ -24,6 +24,7 @@
 #include "TLeafC.h"
 #include "TLeafObject.h"
 #include "TROOT.h"
+#include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
@@ -208,6 +209,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       TString containerName;
       TString subBranchPrefix;
       Bool_t skipped = false;
+
+      // Check for containers (TClonesArray or STL)
       {
          TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek();
@@ -251,7 +254,64 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
 
       printf("containerName: %s subBranchPrefix: %s\n", containerName.Data(), subBranchPrefix.Data());
 
-      return 0;
+      // Loop through sub-branches
+      TIter elements( info->GetElements() );
+      for( TStreamerElement *element = (TStreamerElement*)elements();
+           element;
+           element = (TStreamerElement*)elements() )
+      {
+         printf("TStreamerElement: %s\n", element->GetName());
+
+         Bool_t isBase = false;
+         Bool_t usedBranch = kTRUE;
+         TString prefix;
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek();
+
+         if (branch==0) {
+            if (desc) {
+               Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
+                     desc->fBranchName, info->GetName());
+            } else {
+               Error("AnalyzeBranches","Ran out of branches when looking in class %s, element %s",
+                     info->GetName(), element->GetName());
+            }
+            return lookedAt;
+         }
+
+         if (info->GetClass()->GetCollectionProxy() && strcmp(element->GetName(),"This")==0) {
+            continue; // Skip the artifical streamer element.
+         }
+
+         if (element->GetType()==-1) {
+            continue; // This is an ignored TObject base class.
+         }
+
+         TString branchEndName;
+         {
+            TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+            if (leaf && outer_isclones == kOut
+                && !(branch->GetType() == 3 || branch->GetType() == 4)) branchEndName = leaf->GetName();
+            else branchEndName = branch->GetName();
+            Int_t pos;
+            pos = branchEndName.Index(".");
+            if (pos!=-1) {
+               if (subBranchPrefix.Length() && branchEndName.BeginsWith(subBranchPrefix)) {
+                  branchEndName.Remove(0, subBranchPrefix.Length() + 1);
+               }
+            }
+         }
+
+         printf("branchEndName: %s\n", branchEndName.Data());
+
+         switch(element->GetType()) {
+            case TVirtualStreamerInfo::kInt:     { printf("Found an Int_t\n"); break; }
+            default:
+               Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(),element->GetType());
+         }
+      }
+
+      return lookedAt;
    }
 
    UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch, UInt_t level)
