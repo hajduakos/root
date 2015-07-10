@@ -426,11 +426,11 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             case TVirtualStreamerInfo::kAny:
             case TVirtualStreamerInfo::kBase:
             case TVirtualStreamerInfo::kSTL: {
-               printf("TODO: switch\n");
                TClass *cl = element->GetClassPointer();
                R__ASSERT(cl);
                printf("Class name: %s\n", cl->GetName());
                readerType = TTreeReaderDescriptor::ReaderType::kValue;
+               // Check for collections
                ELocation isclones = outer_isclones;
                if (cl == TClonesArray::Class()) {
                   isclones = kClones;
@@ -444,8 +444,36 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
                   if (valueClass) dataType = valueClass->GetName();
                   else {
-                     // TODO: built-in types
+                     TDataType *valueClassBuiltIn = TDataType::GetDataType(cl->GetCollectionProxy()->GetType());
+                     if (valueClassBuiltIn) dataType = valueClassBuiltIn->GetName();
+                     else printf("Could not get type from collection\n");
                   }
+               }
+
+               TBranch *parent = branch->GetMother()->GetSubBranch(branch);
+               TVirtualStreamerInfo *objInfo = 0;
+               if (branch->GetListOfBranches()->GetEntries()) {
+                  objInfo = ((TBranchElement*)branch->GetListOfBranches()->At(0))->GetInfo();
+               } else {
+                  objInfo = branch->GetInfo();
+               }
+               if (element->IsBase()) {
+                  printf("TODO: IsBase\n");
+                  isBase = true;
+                  prefix  = "base";
+                  // Ignore TObject
+                  if (cl == TObject::Class()/* && info->GetClass()->CanIgnoreTObjectStreamer()*/)
+                  {
+                     continue;
+                  }
+
+                  if (branchEndName == element->GetName()) {
+                     printf("TODO: branchEndname == element->GetName()\n");
+                  } else {
+                     printf("TODO: branchEndname != element->GetName()\n");
+                  }
+               } else {
+                  printf("TODO: Not IsBase\n");
                }
 
                break;
