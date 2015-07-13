@@ -296,6 +296,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          }
       }
 
+      TIter peek = branches;
       printf("containerName: %s subBranchPrefix: %s\n", containerName.Data(), subBranchPrefix.Data());
 
       // Loop through sub-branches
@@ -309,7 +310,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          Bool_t isBase = false;
          Bool_t usedBranch = kTRUE;
          TString prefix;
-         TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek();
 
          if (branch==0) {
@@ -345,7 +345,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                }
             }
          }
-
          //printf("branchEndName: %s\n", branchEndName.Data());
 
          TString dataType;
@@ -486,7 +485,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (desc) {
             dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
          }
-         AddReader(readerType, dataType, dataMemberName, element->GetName());
+         AddReader(readerType, dataType, dataMemberName, branch->GetName());
       }
 
       return lookedAt;
