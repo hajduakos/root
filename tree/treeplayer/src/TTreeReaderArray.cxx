@@ -683,7 +683,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                // Try getting the contained class
                dict = myCollectionProxy->GetValueClass();
                // If it fails, try to get the contained type as a primitive type
-               if (!dict) dict = TDataType::GetDataType(myCollectionProxy->GetType());
+               //if (!dict) dict = TDataType::GetDataType(myCollectionProxy->GetType());
+               if (!dict) {
+                  TString typed;
+                  typed.Form("%s::value_type", myClass->GetName());
+                  dict = TDataType::GetDictionary(gROOT->GetType(typed.Data())->GetFullTypeName());
+               }
                if (!dict){
                   Error("GetBranchDataType()", "Could not get valueClass from collectionProxy.");
                   return 0;
@@ -718,7 +723,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             // Try getting the contained class
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
             // If it fails, try to get the contained type as a primitive type
-            if (!dict) dict = TDataType::GetDataType(brElement->GetClass()->GetCollectionProxy()->GetType());
+            //if (!dict) dict = TDataType::GetDataType(brElement->GetClass()->GetCollectionProxy()->GetType());
+            if (!dict) {
+               TString typed;
+               typed.Form("%s::value_type", brElement->GetClass()->GetName());
+               dict = TDataType::GetDictionary(gROOT->GetType(typed.Data())->GetFullTypeName());
+            }
             if (dict) contentTypeName = dict->GetName();
             return 0;
          }
