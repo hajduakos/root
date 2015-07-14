@@ -304,8 +304,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
            element;
            element = (TStreamerElement*)elements() )
       {
-         //printf("TStreamerElement: %s\n", element->GetName());
-
          Bool_t isBase = false;
          Bool_t usedBranch = kTRUE;
          TString prefix;
@@ -331,6 +329,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             continue; // This is an ignored TObject base class.
          }
 
+         TString branchname = branch->GetName();
          TString branchEndName;
          {
             TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
@@ -345,8 +344,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                }
             }
          }
-         //printf("branchEndName: %s\n", branchEndName.Data());
-         printf("EName: %s BName: %s\n", element->GetName(), branch->GetName());
+         printf("\tElementName: %s BranchName: %s\n", element->GetName(), branch->GetName());
          TString dataType;
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          Bool_t ispointer = false;
@@ -427,7 +425,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             case TVirtualStreamerInfo::kSTL: {
                TClass *cl = element->GetClassPointer();
                R__ASSERT(cl);
-               printf("Class name: %s\n", cl->GetName());
+               printf("\tClass name: %s\n", cl->GetName());
                readerType = TTreeReaderDescriptor::ReaderType::kValue;
                // Check for collections
                ELocation isclones = outer_isclones;
@@ -457,7 +455,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   objInfo = branch->GetInfo();
                }
                if (element->IsBase()) {
-                  printf("TODO: IsBase\n");
+                  printf("\tTODO: IsBase\n");
                   isBase = true;
                   prefix  = "base";
                   // Ignore TObject
@@ -466,13 +464,45 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      continue;
                   }
 
+                  TBranchDescriptor *bdesc = 0;
+
                   if (branchEndName == element->GetName()) {
-                     printf("TODO: branchEndname == element->GetName()\n");
+                     printf("\t\tTODO: branchEndname == element->GetName()\n");
+                     // We have a proper node for the base class, recurse
+                     if (branch->GetListOfBranches()->GetEntries() == 0) {
+                        // The branch contains a non-split base class that we are unfolding!
+                        printf("\t\t\tTODO: Non-split base class\n");
+                     } else {
+                        printf("\t\t\tTODO: Split base class\n");
+                        Int_t pos = branchname.Last('.');
+                        if (pos != -1) {
+                           branchname.Remove(pos);
+                        }
+                        TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
+
+
+
+                     }
                   } else {
-                     printf("TODO: branchEndname != element->GetName()\n");
+                     // We do not have a proper node for the base class,
+                     // we need to loop over the next branches
+                     printf("\t\tTODO: branchEndname != element->GetName()\n");
                   }
                } else {
-                  printf("TODO: Not IsBase\n");
+                  printf("\tTODO: Not IsBase\n");
+                  if (branchEndName == element->GetName()) {
+                     printf("\t\tTODO: branchEndname == element->GetName()\n");
+                     // We have a proper node for the base class, recurse
+                     if (branch->GetListOfBranches()->GetEntries() == 0) {
+                        
+                     } else {
+                        
+                     }
+                  } else {
+                     // We do not have a proper node for the base class,
+                     // we need to loop over the next branches
+                     printf("\t\tTODO: branchEndname != element->GetName()\n");
+                  }
                }
 
                break;
