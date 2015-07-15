@@ -489,10 +489,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         if (pos != -1) {
                            branchname.Remove(pos);
                         }
-                        TString local_prefix = branchname;
-                        if (desc) {
-                           local_prefix.Form("%s_%s", desc->fSubBranchPrefix.Data(), branchname.Data());
-                        }
+                        TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
                                                       isclones, branch->GetSplitLevel(), containerName);
                         lookedAt += AnalyzeBranches( level+1, bdesc, branch, objInfo);
