@@ -503,10 +503,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      if (pos != -1) {
                         branchname.Remove(pos);
                      }
-                     TString local_prefix = branchname;
-                     if (desc) {
-                        local_prefix.Form("%s_%s", desc->fSubBranchPrefix.Data(), branchname.Data());
-                     }
+                     TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
                      objInfo = GetBaseClass(element);
                      if (objInfo == 0) {
                         continue; // There is no data in this base class
@@ -532,11 +529,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                            cl = TClass::GetClass(dataType);
                            objInfo = GetStreamerInfo(branch, branch->GetListOfBranches(), cl);
                         }
-                        TString local_prefix = branchname;
-                        if (desc) {
-                           local_prefix.Form("%s_%s", desc->fSubBranchPrefix.Data(), branchname.Data());
-                        }
-                        bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
+                        bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branch->GetName(),
                                                       isclones, branch->GetSplitLevel(), containerName);
                         lookedAt += AnalyzeBranches( level+1, bdesc, branch, objInfo);
                      }
