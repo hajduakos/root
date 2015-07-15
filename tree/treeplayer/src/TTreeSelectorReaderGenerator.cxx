@@ -524,7 +524,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   printf("\tNot IsBase\n");
                   TBranchDescriptor *bdesc = 0;
                   if (branchEndName == element->GetName()) {
-                     printf("\t\tTODO: branchEndname == element->GetName()\n");
+                     printf("\t\tbranchEndname == element->GetName()\n");
                      // We have a proper node for the base class, recurse
                      if (branch->GetListOfBranches()->GetEntries() == 0) {
                         printf("\t\t\tTODO: Non-split non-base class\n");
@@ -546,7 +546,25 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   } else {
                      // We do not have a proper node for the base class,
                      // we need to loop over the next branches
-                     printf("\t\tTODO: branchEndname != element->GetName()\n");
+                     printf("\t\tbranchEndname != element->GetName()\n");
+                     TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
+                     if (local_prefix.Length()) local_prefix += ".";
+                     local_prefix += element->GetName();
+                     objInfo = branch->GetInfo();
+                     Int_t pos = branchname.Last('.');
+                     if (pos != -1) {
+                        branchname.Remove(pos);
+                     }
+                     if (isclones != kOut) {
+                        // We have to guess the version number!
+                        cl = TClass::GetClass(dataType);
+                        objInfo = GetStreamerInfo(branch, branches, cl);
+                     }
+                     bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
+                                                   isclones, branch->GetSplitLevel(), containerName);
+                     usedBranch = kFALSE;
+                     skipped = kTRUE;
+                     lookedAt += AnalyzeBranches( level, bdesc, branches, objInfo );
                   }
                }
 
