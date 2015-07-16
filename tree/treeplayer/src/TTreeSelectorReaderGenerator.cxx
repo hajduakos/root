@@ -481,8 +481,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      printf("\t\tbranchEndname == element->GetName()\n");
                      // We have a proper node for the base class, recurse
                      if (branch->GetListOfBranches()->GetEntries() == 0) {
-                        // The branch contains a non-split base class that we are unfolding!
-                        printf("\t\t\tTODO: Non-split base class\n");
+                        // The branch contains a non-split base class
+                        printf("\t\t\tNon-split base class\n");
+                        // FIXME: nothing to do in such cases, because readers cannot access non-split members
                      } else {
                         printf("\t\t\tSplit base class\n");
                         Int_t pos = branchname.Last('.');
@@ -521,7 +522,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      printf("\t\tbranchEndname == element->GetName()\n");
                      // We have a proper node for the base class, recurse
                      if (branch->GetListOfBranches()->GetEntries() == 0) {
-                        printf("\t\t\tTODO: Non-split non-base class\n");
+                        printf("\t\t\tNon-split non-base class\n");
+                        // FIXME: nothing to do in such cases, because readers cannot access non-split members
                      } else {
                         printf("\t\t\tSplit non-base class\n");
                         if (isclones != kOut) {
