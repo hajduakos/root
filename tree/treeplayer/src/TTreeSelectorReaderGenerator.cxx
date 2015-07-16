@@ -817,11 +817,13 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             }
          
          } else { // Branch is splitted
-            // TODO: implement this
-            printf("TODO: splitted branch\n");
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {
                AnalyzeBranches(1, desc, dynamic_cast<TBranchElement*>(branch), info);
+               AddReader(isclones == kOut ?
+                              TTreeReaderDescriptor::ReaderType::kValue
+                            : TTreeReaderDescriptor::ReaderType::kArray,
+                            desc->GetName(), desc->fBranchName, desc->fBranchName);
             }
          }
       }
