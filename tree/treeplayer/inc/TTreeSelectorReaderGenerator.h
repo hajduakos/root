@@ -89,7 +89,6 @@ namespace ROOT {
    {
       TTree   *fTree;          // Pointer to the tree
       TString  fClassname;     // Class name of the selector
-      UInt_t   fMaxUnrolling;  // Depth of unrolling for non-split classes
       TList    fListOfHeaders; // List of included headers
       TList    fListOfReaders; // List of readers
       
@@ -104,7 +103,7 @@ namespace ROOT {
       void   WriteSelector();
    
    public:
-      TTreeSelectorReaderGenerator(TTree* tree, const char *classname, UInt_t maxUnrolling);
+      TTreeSelectorReaderGenerator(TTree* tree, const char *classname);
       
    };
 
