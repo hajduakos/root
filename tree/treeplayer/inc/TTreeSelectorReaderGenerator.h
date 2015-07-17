@@ -45,10 +45,10 @@ namespace ROOT {
    class TTreeReaderDescriptor : public TObject {
    public:
       enum ReaderType { kValue, kArray };
-      ReaderType fType;
-      TString fDataType;
-      TString fName;
-      TString fBranchName;
+      ReaderType fType;    // Type of the reader: Value or Array
+      TString fDataType;   // Data type of reader
+      TString fName;       // Reader name
+      TString fBranchName; // Branch corresponding to the reader
       
       TTreeReaderDescriptor(ReaderType type, TString dataType, TString name, TString branchName) : 
          fType(type),
@@ -59,11 +59,11 @@ namespace ROOT {
 
    class TBranchDescriptor : public TNamed {
    public:
-      ELocation             fIsClones;
-      TString               fContainerName;
-      TString               fBranchName;
-      TString               fFullBranchName;
-      TVirtualStreamerInfo *fInfo;
+      ELocation             fIsClones;       // Type of container
+      TString               fContainerName;  // Name of the container
+      TString               fBranchName;     // Short name of the branch
+      TString               fFullBranchName; // Full name of the branch
+      TVirtualStreamerInfo *fInfo;           // Streamer info
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
                         const char *branchname, ELocation isclones,
@@ -75,6 +75,7 @@ namespace ROOT {
          fFullBranchName(branchname),
          fInfo(info)
          {
+            // If there is a prefix, append to the beginning
             if (prefix) {
                fFullBranchName.Form("%s_%s", prefix, branchname);
             }
