@@ -295,13 +295,13 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                outer_isclones = kSTL;
                containerName = branch->GetMother()->GetClassName();
             }
-         } else if (branch->GetType() == 3) {
+         }/* else if (branch->GetType() == 3) {
             outer_isclones = kClones;
             containerName = "TClonesArray";
          } else if (branch->GetType() == 4) {
             outer_isclones = kSTL;
             containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
-         }
+         }*/
          if (desc) {
             subBranchPrefix = desc->fBranchName;
          } else {
@@ -371,6 +371,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString dataType; // Data type of reader
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          Bool_t ispointer = false;
+         ELocation isclones = outer_isclones;
          // Get data type
          switch(element->GetType()) {
             // Built-in types
@@ -452,7 +453,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                dataType = cl->GetName();
                readerType = TTreeReaderDescriptor::ReaderType::kValue;
                // Check for containers
-               ELocation isclones = outer_isclones;
                if (cl == TClonesArray::Class()) { // TClonesArray
                   isclones = kClones;
                   dataType = GetContainedClassName(branch, element, ispointer);
@@ -571,6 +571,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             TString dataMemberName = element->GetName();
             if (desc) {
                dataMemberName.Form("%s_%s", desc->fFullBranchName.Data(), element->GetName());
+            }
+            if (outer_isclones != kOut || isclones != kOut) {
+               readerType = TTreeReaderDescriptor::ReaderType::kArray;
             }
             AddReader(readerType, dataType, dataMemberName, branch->GetName());
          }
