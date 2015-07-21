@@ -35,7 +35,7 @@ namespace ROOT {
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor. Analyzes the tree and writes selector.
 
-   TTreeSelectorReaderGenerator::TTreeSelectorReaderGenerator(TTree* tree, const char *classname) : 
+   TTreeSelectorReaderGenerator::TTreeSelectorReaderGenerator(TTree* tree, const char *classname) :
       fTree(tree),
       fClassname(classname)
    {
@@ -618,7 +618,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
 
       return extraLookedAt;
    }
-   
+
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyze the leaf and add the variables found.
 
@@ -721,7 +721,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          branchName.Form("%s.%s", leaf->GetBranch()->GetName(), leaf->GetName());
       }
 
-      AddReader(type, dataType, leaf->GetName(), branchName);         
+      AddReader(type, dataType, leaf->GetName(), branchName);
 
       return 0;
    }
