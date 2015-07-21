@@ -2,7 +2,7 @@
 // Author: Akos Hajdu 22/06/2015
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -30,7 +30,6 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-
 
 class TBranch;
 class TBranchElement;
@@ -105,9 +104,7 @@ namespace ROOT {
 
    public:
       TTreeSelectorReaderGenerator(TTree* tree, const char *classname);
-
    };
-
 }
 
 using ROOT::TTreeSelectorReaderGenerator;
