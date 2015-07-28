@@ -6008,19 +6008,7 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
 
 Int_t TTree::MakeSelector(const char* selector)
 {
-   // The original functionality of MakeSelector:
-   // return MakeClass(selector, "selector");
-   
-   // The lines below are for testing purpose to test generation with
-   // and without selector and reader
-   
-   // Test without selector
-   //MakeClass(selector, "");
-   //return MakeClass(selector, "reader");
-   
-   // Test with selector
-   MakeClass(selector, "selector");
-   return MakeClass(selector, "selector,reader");
+   return MakeClass(selector, "selector");
 }
 
 
