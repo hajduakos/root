@@ -740,6 +740,18 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          dict = fDict;
          return 0;
       }
+      if (branch->IsA() == TBranchObject::Class() && !strcmp(branch->GetClassName(), "TClonesArray")){
+         if (!fProxy->Setup() || !fProxy->Read()){
+            Error("GetBranchContentDataType()", "Failed to get type from proxy, unable to check type");
+            contentTypeName = "UNKNOWN";
+            dict = 0;
+            return contentTypeName;
+         }
+         TClonesArray *myArray = (TClonesArray*)fProxy->GetWhere();
+         dict = myArray->GetClass();
+         contentTypeName = dict->GetName();
+         return 0;
+      }
       return dataTypeName;
    } else if (branch->IsA() == TBranchClones::Class()) {
       dict = TClonesArray::Class();
