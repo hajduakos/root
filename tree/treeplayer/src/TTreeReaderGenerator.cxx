@@ -769,8 +769,18 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (fIncludeAllLeaves) return kTRUE;
          if (FindStringInVector(branchName, fIncludeLeaves)) return kTRUE;
          if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
+         if (!parent) { // Branch is topmost (top-level leaf)
+            if (fIncludeAllTopmost) return kTRUE;
+         } else {       // Branch is not topmost
+            // TODO: check ancestors
+         }
       } else {      // Branch is not a leaf (has sub-branches)
-         
+         if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
+         if (!parent) { // Branch is topmost
+            if (fIncludeAllTopmost) return kTRUE;
+         } else {       // Branch is not topmost
+            
+         }
       }
       return false;
    }
@@ -802,7 +812,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       if(fIncludeAllLeaves) printf("Include all leaves\n");
       if(fIncludeAllTopmost) printf("Include all topmost\n");
       if(fIncludeStruct.size()>0) { printf("Struct: "); for(TString s : fIncludeStruct) printf("%s ", s.Data()); printf("\n"); }
-      if(fIncludeStruct.size()>0) { printf("Leaves: "); for(TString s : fIncludeLeaves) printf("%s ", s.Data()); printf("\n"); }
+      if(fIncludeLeaves.size()>0) { printf("Leaves: "); for(TString s : fIncludeLeaves) printf("%s ", s.Data()); printf("\n"); }
    }
 
    ////////////////////////////////////////////////////////////////////////////////
