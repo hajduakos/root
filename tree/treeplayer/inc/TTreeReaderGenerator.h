@@ -87,15 +87,15 @@ namespace ROOT {
 
    class TTreeReaderGenerator
    {
-      TTree   *fTree;                       // Pointer to the tree
-      TString  fClassname;                  // Class name of the selector
-      TList    fListOfHeaders;              // List of included headers
-      TList    fListOfReaders;              // List of readers
-      TString  fOptions;                    // User options as a string
-      Bool_t   fIncludeAllLeaves;           // Should all leaves be included
-      Bool_t   fIncludeAllTopmost;          // Should all topmost branches be included
-      std::vector<TString>  fIncludeLeaves; // Branches whose leaves should be included
-      std::vector<TString>  fIncludeStruct; // Branches whom should be included
+      TTree                *fTree;              // Pointer to the tree
+      TString               fClassname;         // Class name of the selector
+      TList                 fListOfHeaders;     // List of included headers
+      TList                 fListOfReaders;     // List of readers
+      TString               fOptions;           // User options as a string
+      Bool_t                fIncludeAllLeaves;  // Should all leaves be included
+      Bool_t                fIncludeAllTopmost; // Should all topmost branches be included
+      std::vector<TString>  fIncludeLeaves;     // Branches whose leaves should be included
+      std::vector<TString>  fIncludeStruct;     // Branches whom should be included
 
       void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
