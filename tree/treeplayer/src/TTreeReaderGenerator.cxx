@@ -471,7 +471,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                if (cl == TClonesArray::Class()) { // TClonesArray
                   isclones = kClones;
                   containerName = "TClonesArray";
-                  if (outer_isclones) { // If the parent is already a collection
+                  if (outer_isclones != kOut) { // If the parent is already a collection
+                     isclones = outer_isclones;
                      dataType = "TClonesArray";
                   } else {
                      readerType = TTreeReaderDescriptor::ReaderType::kArray;
@@ -480,7 +481,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                } else if (cl->GetCollectionProxy()) { // STL collection
                   isclones = kSTL;
                   containerName = cl->GetName();
-                  if (outer_isclones) { // If the parent is already a collection
+                  // TTreeReaderArray cannot handle vector<bool>
+                  if (outer_isclones != kOut || containerName.EqualTo("vector<bool>")) { // If the parent is already a collection
+                     isclones = outer_isclones;
                      dataType = cl->GetName();
                   } else {
                      readerType = TTreeReaderDescriptor::ReaderType::kArray;
