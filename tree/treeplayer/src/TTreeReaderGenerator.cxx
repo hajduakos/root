@@ -229,7 +229,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          }
          directive = Form("#include \"%s\"\n",filename);
       } else if (!strncmp(cl->GetName(), "pair<", 5)
-                 || !strncmp(cl->GetName(), "std::pair<", 10)) { // TODO: what is this?
+                 || !strncmp(cl->GetName(), "std::pair<", 10)) {
          TClassEdit::TSplitType split(cl->GetName());
          if (split.fElements.size() == 3) {
             for (int arg = 1; arg < 3; ++arg) {
@@ -481,8 +481,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                } else if (cl->GetCollectionProxy()) { // STL collection
                   isclones = kSTL;
                   containerName = cl->GetName();
-                  // TTreeReaderArray cannot handle vector<bool>
-                  if (outer_isclones != kOut || containerName.EqualTo("vector<bool>")) { // If the parent is already a collection
+                  if (outer_isclones != kOut || containerName.EqualTo("vector<bool>")) {
+                     // If the parent is already a collection we can only add this collection as a whole
+                     // Also TTreeReaderArray does currently not support vectors of bool so
+                     // that need to be added as a whole.
+                     // Also getting the inner type of vector would return "unsigned" so the full
+                     // name has to be compared
                      isclones = outer_isclones;
                      dataType = cl->GetName();
                   } else {
@@ -894,11 +898,14 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else { // RAW type (or missing class) inside container
                   // TODO: CheckForMissingClass?
-                  if (containerName.EqualTo("vector<bool>")) { // TTreeReaderArray currently does not support bool arrays
+                  // TTreeReaderArray does currently not support vectors of bool so that need to
+                  // be added as a TTreeReaderValue<vector<bool>>. Also getting the inner type of
+                  // vector would return "unsigned" so the full name has to be compared.
+                  if (containerName.EqualTo("vector<bool>")) {
                      AddReader(TTreeReaderDescriptor::ReaderType::kValue,
                             containerName,
                             branch->GetName(), branch->GetName(), 0, kTRUE);
-                  } else {
+                  } else { // Otherwise we can generate a TTreeReaderArray with the inner type
                      AddReader(TTreeReaderDescriptor::ReaderType::kArray,
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
                             branch->GetName(), branch->GetName(), 0, kTRUE);
@@ -1066,8 +1073,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       fprintf(fp,"void %s::Init(TTree *tree)\n", fClassname.Data());
       fprintf(fp,"{\n");
       fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
-                 "   // a new tree or chain. Typically here the branch addresses and branch\n" // TODO: replace comment?
-                 "   // pointers of the tree will be set.\n"
+                 "   // a new tree or chain. Typically here the reader is initialized.\n"
                  "   // It is normally not necessary to make changes to the generated\n"
                  "   // code, but the routine can be extended by the user if needed.\n"
                  "   // Init() will be called many times when running on PROOF\n"
