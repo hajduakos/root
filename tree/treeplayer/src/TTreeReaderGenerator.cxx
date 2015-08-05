@@ -891,9 +891,15 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else { // RAW type (or missing class) inside container
                   // TODO: CheckForMissingClass?
-                  AddReader(TTreeReaderDescriptor::ReaderType::kArray,
+                  if (containerName.EqualTo("vector<bool>")) { // TTreeReaderArray currently does not support bool arrays
+                     AddReader(TTreeReaderDescriptor::ReaderType::kValue,
+                            containerName,
+                            branch->GetName(), branch->GetName(), 0, kTRUE);
+                  } else {
+                     AddReader(TTreeReaderDescriptor::ReaderType::kArray,
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
                             branch->GetName(), branch->GetName(), 0, kTRUE);
+                  }
                   continue; // Nothing else to with this branch in these cases
                }
             }
