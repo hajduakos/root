@@ -535,7 +535,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         }
                         TString local_prefix = desc ? desc->fBranchName : TString(parent->GetName());
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
+                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0, desc);
                         // Recurse: analyze sub-branches of the sub-branch
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
                         isLeaf = false;
@@ -553,7 +553,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      }
                      cl = objInfo->GetClass();
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                    isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
+                                                    isclones, containerName, desc ? desc->fFullBranchName.Data() : 0, desc);
                      usedBranch = kFALSE;
                      // Recurse: analyze the sub-elements with the same branches
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
@@ -572,7 +572,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                            objInfo = GetStreamerInfo(branch, branch->GetListOfBranches(), cl);
                         }
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branch->GetName(),
-                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
+                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0, desc);
                         // Recurse: analyze sub-branches of the sub-branch
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
                         isLeaf = false;
@@ -592,7 +592,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         objInfo = GetStreamerInfo(branch, branches, cl);
                      }
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                   isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
+                                                   isclones, containerName, desc ? desc->fFullBranchName.Data() : 0, desc);
                      usedBranch = kFALSE;
                      skipped = kTRUE;
                      // Recurse: analyze the sub-elements with the same branches
@@ -775,7 +775,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (!parent) { // Branch is topmost (top-level leaf)
             if (fIncludeAllTopmost) return kTRUE;
          } else {       // Branch is not topmost
-            // TODO: check ancestors
+            while (parent) {
+               if (FindStringInVector(parent->fBranchName, fIncludeLeaves)) {
+                  return kTRUE;
+               }
+               parent = parent->fParent;
+            }
          }
       } else {      // Branch is not a leaf (has sub-branches)
          if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
