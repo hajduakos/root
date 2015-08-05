@@ -342,6 +342,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       {
          Bool_t isBase = false;     // Does the element correspond to a base class
          Bool_t usedBranch = kTRUE; // Does the branch correspond to the element (i.e., they match)
+         Bool_t isLeaf = true;    // Is the branch a leaf (i.e. no sub-branches)
          TIter peek = branches;     // Iterator for sub-branches
          // Always start with the first available sub-branch and if it does not match the element,
          // try the next ones
@@ -537,6 +538,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                                       isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                         // Recurse: analyze sub-branches of the sub-branch
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
+                        isLeaf = false;
 
                      }
                   } else { // The element and the branch does not match, we need to loop over the next branches
@@ -573,6 +575,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                                       isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                         // Recurse: analyze sub-branches of the sub-branch
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
+                        isLeaf = false;
                      }
                   } else { // The element and the branch does not match, we need to loop over the next branches
                      TString local_prefix = desc ? desc->fBranchName : TString(parent->GetName());
@@ -615,7 +618,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                if (outer_isclones != kOut || isclones != kOut) {
                   readerType = TTreeReaderDescriptor::ReaderType::kArray;
                }
-               AddReader(readerType, dataType, dataMemberName, branch->GetName());
+               AddReader(readerType, dataType, dataMemberName, branch->GetName(), desc, isLeaf);
             }
          }
 
@@ -885,7 +888,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   // TODO: CheckForMissingClass?
                   AddReader(TTreeReaderDescriptor::ReaderType::kArray,
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
-                            branch->GetName(), branch->GetName());
+                            branch->GetName(), branch->GetName(), 0, kTRUE);
                   continue; // Nothing else to with this branch in these cases
                }
             }
@@ -904,7 +907,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            cl->GetName(), branchName, branchName);
+                            cl->GetName(), branchName, branchName, 0, kTRUE);
                   // TODO: can't we just put a continue here?
                }
             }
@@ -918,7 +921,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            desc->GetName(), desc->fBranchName, desc->fBranchName);
+                            desc->GetName(), desc->fBranchName, desc->fBranchName, 0, kTRUE);
                }
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch); // Analyze branch and extract readers
@@ -932,7 +935,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
-                            desc->GetName(), desc->fBranchName, desc->fBranchName);
+                            desc->GetName(), desc->fBranchName, desc->fBranchName, 0, kFALSE);
             }
          }
          delete desc;
